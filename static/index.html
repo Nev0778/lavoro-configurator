@@ -386,7 +386,8 @@
       <div class="gallery-hint" id="gallery-hint">Drag to rotate · Scroll to zoom</div>
       <button class="viewer-toggle" id="viewer-toggle">View in 3D</button>
       <button class="viewer-toggle" id="reset-camera-btn" onclick="resetCamera()" style="right:120px;display:none;" title="Reset view">⟳ Reset View</button>
-      <button class="viewer-toggle" id="ar-btn" onclick="launchAR()" style="left:12px;right:auto;display:none;background:#2a6496;" title="View in Augmented Reality">📱 View in AR</button>
+      <button class="viewer-toggle" id="ar-btn" onclick="launchAR()" style="left:12px;right:auto;background:#2a6496;"
+ title="View in Augmented Reality">📱 View in AR</button>
       <!-- model-viewer element (hidden, used only to trigger AR) -->
       <model-viewer id="desk-model-viewer"
         src="/static/advance_desk.glb"
@@ -787,19 +788,15 @@ function launchAR() {
     return;
   }
 
-  // Android / other: try model-viewer's built-in AR activation first
-  const mv = document.getElementById('desk-model-viewer');
-  if (mv && mv.canActivateAR) {
-    mv.activateAR();
+  if (isAndroid) {
+    // Android Chrome: use Google Scene Viewer directly
+    const glbUrl = window.location.origin + '/static/advance_desk.glb';
+    const sceneViewerUrl = 'https://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(glbUrl ) + '&mode=ar_preferred&resizable=false&title=Lavoro%20Advance%20Desk';
+    const intentUrl = 'intent://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(glbUrl) + '&mode=ar_preferred&resizable=false&title=Lavoro%20Advance%20Desk#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=' + encodeURIComponent(sceneViewerUrl ) + ';end;';
+    window.location.href = intentUrl;
     return;
   }
 
-  if (isAndroid) {
-    // Fallback: Android Scene Viewer intent
-    const glbUrl = encodeURIComponent(window.location.origin + '/static/advance_desk.glb');
-    window.location.href = `intent://arvr.google.com/scene-viewer/1.0?file=${glbUrl}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`;
-    return;
-  }
 
   // Desktop fallback
   alert('AR is available on Android (Chrome) and iOS (Safari). Open this page on your smartphone to try it.');
