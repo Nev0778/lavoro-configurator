@@ -160,12 +160,13 @@
     .decor-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
     .decor-swatch {
       width: 72px; height: 72px; border-radius: 0;
-      border: 2px solid transparent; cursor: pointer;
+      border: none; cursor: pointer;
       background-size: cover; background-position: center;
-      transition: border-color .15s, box-shadow .15s;
+      transition: outline-color .15s, box-shadow .15s;
+      outline: 2px solid transparent; outline-offset: 1px;
     }
     .decor-swatch:hover { box-shadow: 0 0 0 1px var(--mid); }
-    .decor-swatch.active { border-color: var(--black); }
+    .decor-swatch.active { outline-color: var(--black); }
 
     /* Size selector */
     .size-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
@@ -959,13 +960,20 @@ function fitCamera() {
   const box = new THREE.Box3().setFromObject(deskGroup);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov = threeCamera.fov * (Math.PI / 180);
-  const dist = Math.abs(maxDim / Math.sin(fov / 2)) * 0.9;
 
-  threeCamera.position.set(center.x + dist * 0.8, center.y + dist * 0.5, center.z + dist * 0.8);
+  // Camera distance is 3.3× the desk width — empirically tuned to fit the full
+  // desk (including 975mm height) within the viewer panel at all standard sizes.
+  const dist = size.x * 3.3;
+
+  // Position camera at a comfortable angle above and to the front-right
+  threeCamera.position.set(
+    center.x + dist * 0.6,
+    center.y + dist * 0.4,
+    center.z + dist * 0.8
+  );
   threeControls.target.copy(center);
   threeControls.update();
+  if (window._requestRender) window._requestRender();
 }
 
 function updateFrameMaterial() {
@@ -1036,9 +1044,13 @@ function updateDesktopTexture() {
 
 function rescaleDeskModel() {
   if (!deskGroup) return;
-  // OBJ axes (after -X rotation): Three.js X = OBJ X (width), Three.js Z = OBJ Y (depth)
-  // Desktop original: 1200mm wide × 700mm deep
-  // Frame original: legs are fixed width/depth — only scale in X (width)
+  // Geometry is in LOCAL mesh space (before parent -X rotation):
+  //   Local X = width (±600mm), Local Y = depth (±350mm), Local Z = height (950–975mm)
+  // After parent -90° X rotation, in Three.js world space:
+  //   World X = width, World Y = height (up), World Z = depth
+  // So to scale correctly in LOCAL space:
+  //   scaleW applies to local X (width)
+  //   scaleD applies to local Y (depth) — NOT local Z which is height
   const scaleW = state.width / 1200;  // width scale for everything
   const scaleD = state.depth / 700;   // depth scale for desktop only
 
@@ -1046,10 +1058,10 @@ function rescaleDeskModel() {
     if (!child.isMesh) return;
     const matName = child.name || (child.material && child.material.name ? child.material.name : '');
     if (matName === MAT_DESKTOP || (child.material && child.material.name === MAT_DESKTOP)) {
-      // Desktop: scale both width (X) and depth (Z)
-      child.scale.set(scaleW, 1, scaleD);
+      // Desktop: scale width (local X) and depth (local Y), leave height (local Z) unchanged
+      child.scale.set(scaleW, scaleD, 1);
     } else {
-      // Frame/legs: scale only width (X), keep depth fixed
+      // Frame/legs: scale only width (local X), keep depth and height fixed
       child.scale.set(scaleW, 1, 1);
     }
   });
@@ -1059,6 +1071,12 @@ function rescaleDeskModel() {
 
   // Update texture tiling
   updateDesktopTexture();
+
+  // Refit camera to new desk dimensions (defer to allow geometry bounds to update)
+  requestAnimationFrame(() => {
+    fitCamera();
+    if (window._requestRender) window._requestRender();
+  });
 }
 
 function onWindowResize() {
