@@ -609,7 +609,7 @@ const FRAME_FINISHES = [
   { name: 'Raw Steel',     ral: null,   hex: '#c8c8c0', swatch: '/static/swatches/frame_raw_steel.jpg',  metalness: 0.35, roughness: 0.35 },
   { name: 'Silver',        ral: '9006', hex: '#b0afac', swatch: '/static/swatches/frame_silver.jpg',     metalness: 0.45, roughness: 0.35 },
   { name: 'Light Grey',    ral: '7047', hex: '#c8c8c7', swatch: '/static/swatches/frame_light_grey.jpg', metalness: 0.25, roughness: 0.60 },
-  { name: 'White',         ral: '9016', hex: '#d6d4ce', swatch: '/static/swatches/frame_white.jpg',      metalness: 0.35, roughness: 0.40 },
+  { name: 'White',         ral: '9016', hex: '#f8f8f6', swatch: '/static/swatches/frame_white.jpg',      metalness: 0.10, roughness: 0.55 },
 ];
 
 const DESKTOP_DECORS = [
@@ -797,8 +797,8 @@ function initThreeViewer() {
   threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   threeRenderer.physicallyCorrectLights = true;
   threeRenderer.outputEncoding = THREE.sRGBEncoding;
-  threeRenderer.toneMapping = THREE.ReinhardToneMapping;
-  threeRenderer.toneMappingExposure = 0.85;
+  threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  threeRenderer.toneMappingExposure = 1.2;
 
   // Scene
   threeScene = new THREE.Scene();
@@ -820,7 +820,7 @@ function initThreeViewer() {
   threeControls.update();
 
   // Lighting — photorealistic setup
-  const ambient = new THREE.AmbientLight(0xffffff, 0.35);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.85);
   threeScene.add(ambient);
 
   // Neutral environment colour for metallic reflections (v0.128 compatible)
@@ -841,7 +841,7 @@ function initThreeViewer() {
   keyLight.shadow.radius = 8; // PCFSoft blur radius — larger = softer shadow edges
   threeScene.add(keyLight);
 
-  const fillLight = new THREE.DirectionalLight(0xe8f0ff, 0.4);
+  const fillLight = new THREE.DirectionalLight(0xe8f0ff, 1.0);
   fillLight.position.set(-2000, 1500, -1000);
   threeScene.add(fillLight);
 
@@ -849,7 +849,7 @@ function initThreeViewer() {
   rimLight.position.set(0, 500, -2000);
   threeScene.add(rimLight);
 
-  const groundLight = new THREE.HemisphereLight(0xffffff, 0xd0ccc8, 0.15);
+  const groundLight = new THREE.HemisphereLight(0xffffff, 0xd0ccc8, 0.40);
   threeScene.add(groundLight);
 
   // Shadow plane
