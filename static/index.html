@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -386,21 +385,7 @@
       <div class="gallery-hint" id="gallery-hint">Drag to rotate · Scroll to zoom</div>
       <button class="viewer-toggle" id="viewer-toggle">View in 3D</button>
       <button class="viewer-toggle" id="reset-camera-btn" onclick="resetCamera()" style="right:120px;display:none;" title="Reset view">⟳ Reset View</button>
-      <button class="viewer-toggle" id="ar-btn" onclick="launchAR()" style="left:12px;right:auto;background:#2a6496;"
- title="View in Augmented Reality">📱 View in AR</button>
-      <!-- model-viewer element (hidden, used only to trigger AR) -->
-      <model-viewer id="desk-model-viewer"
-        src="/static/advance_desk.glb"
-        ios-src="/static/advance_desk.usdz"
-        ar ar-modes="webxr scene-viewer quick-look"
-        camera-controls
-        style="display:none;width:1px;height:1px;position:absolute;"
-        ar-button-label="View in AR">
-      </model-viewer>
-      <!-- iOS AR Quick Look anchor (hidden) -->
-      <a id="ios-ar-anchor" rel="ar" href="/static/advance_desk.usdz" style="display:none;">
-        <img src="" alt="">
-      </a>
+
     </div>
     <div class="gallery-thumbs" id="gallery-thumbs">
       <button class="thumb active" data-src="/static/advance_main.jpg" onclick="showPhoto(this)">
@@ -756,7 +741,6 @@ function showPhoto(btn) {
   document.getElementById('gallery-hint').classList.remove('visible');
   document.getElementById('viewer-toggle').textContent = 'View in 3D';
   document.getElementById('reset-camera-btn').style.display = 'none';
-  document.getElementById('ar-btn').style.display = 'none';
   is3DActive = false;
 }
 
@@ -770,36 +754,9 @@ function show3D() {
   document.getElementById('gallery-hint').classList.add('visible');
   document.getElementById('viewer-toggle').textContent = 'View Photo';
   document.getElementById('reset-camera-btn').style.display = 'block';
-  document.getElementById('ar-btn').style.display = 'block';
   is3DActive = true;
   if (!threeInitialized) initThreeViewer();
   else onWindowResize();
-}
-
-function launchAR() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
-
-  if (isIOS) {
-    // iOS Safari: trigger AR Quick Look via the hidden anchor element
-    // This is the official Apple-recommended method for web AR Quick Look
-    const anchor = document.getElementById('ios-ar-anchor');
-    anchor.click();
-    return;
-  }
-
-  if (isAndroid) {
-    // Android Chrome: use Google Scene Viewer directly
-    const glbUrl = window.location.origin + '/static/advance_desk.glb';
-    const sceneViewerUrl = 'https://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(glbUrl ) + '&mode=ar_preferred&resizable=false&title=Lavoro%20Advance%20Desk';
-    const intentUrl = 'intent://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(glbUrl) + '&mode=ar_preferred&resizable=false&title=Lavoro%20Advance%20Desk#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url=' + encodeURIComponent(sceneViewerUrl ) + ';end;';
-    window.location.href = intentUrl;
-    return;
-  }
-
-
-  // Desktop fallback
-  alert('AR is available on Android (Chrome) and iOS (Safari). Open this page on your smartphone to try it.');
 }
 
 document.getElementById('viewer-toggle').onclick = () => {
@@ -1079,11 +1036,27 @@ function updateDesktopTexture() {
 
 function rescaleDeskModel() {
   if (!deskGroup) return;
-  // Scale the desk group to match new dimensions
-  // Original OBJ is 1200 wide × 700 deep
-  const scaleX = state.width / 1200;
-  const scaleY = state.depth / 700;
-  deskGroup.scale.set(scaleX, 1, scaleY);
+  // OBJ axes (after -X rotation): Three.js X = OBJ X (width), Three.js Z = OBJ Y (depth)
+  // Desktop original: 1200mm wide × 700mm deep
+  // Frame original: legs are fixed width/depth — only scale in X (width)
+  const scaleW = state.width / 1200;  // width scale for everything
+  const scaleD = state.depth / 700;   // depth scale for desktop only
+
+  deskGroup.traverse((child) => {
+    if (!child.isMesh) return;
+    const matName = child.name || (child.material && child.material.name ? child.material.name : '');
+    if (matName === MAT_DESKTOP || (child.material && child.material.name === MAT_DESKTOP)) {
+      // Desktop: scale both width (X) and depth (Z)
+      child.scale.set(scaleW, 1, scaleD);
+    } else {
+      // Frame/legs: scale only width (X), keep depth fixed
+      child.scale.set(scaleW, 1, 1);
+    }
+  });
+
+  // Reset group scale to 1 (individual mesh scales handle it)
+  deskGroup.scale.set(1, 1, 1);
+
   // Update texture tiling
   updateDesktopTexture();
 }
