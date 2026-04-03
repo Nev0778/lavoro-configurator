@@ -1036,11 +1036,27 @@ function updateDesktopTexture() {
 
 function rescaleDeskModel() {
   if (!deskGroup) return;
-  // Scale the desk group to match new dimensions
-  // Original OBJ is 1200 wide × 700 deep
-  const scaleX = state.width / 1200;
-  const scaleY = state.depth / 700;
-  deskGroup.scale.set(scaleX, 1, scaleY);
+  // OBJ axes (after -X rotation): Three.js X = OBJ X (width), Three.js Z = OBJ Y (depth)
+  // Desktop original: 1200mm wide × 700mm deep
+  // Frame original: legs are fixed width/depth — only scale in X (width)
+  const scaleW = state.width / 1200;  // width scale for everything
+  const scaleD = state.depth / 700;   // depth scale for desktop only
+
+  deskGroup.traverse((child) => {
+    if (!child.isMesh) return;
+    const matName = child.name || (child.material && child.material.name ? child.material.name : '');
+    if (matName === MAT_DESKTOP || (child.material && child.material.name === MAT_DESKTOP)) {
+      // Desktop: scale both width (X) and depth (Z)
+      child.scale.set(scaleW, 1, scaleD);
+    } else {
+      // Frame/legs: scale only width (X), keep depth fixed
+      child.scale.set(scaleW, 1, 1);
+    }
+  });
+
+  // Reset group scale to 1 (individual mesh scales handle it)
+  deskGroup.scale.set(1, 1, 1);
+
   // Update texture tiling
   updateDesktopTexture();
 }
