@@ -1004,9 +1004,11 @@ function updateFrameMaterial() {
 
 // Wood-grain decors — grain runs vertically in the source image,
 // so we rotate the texture 90° to make it run along the desk length (X axis).
+// Textures with vertical grain in source image — need 90° rotation so grain runs along desk width
 const WOOD_DECORS = new Set([
   'Anthracite Sherman Oak', 'Natural Dijon Walnut', 'Grey Nebraska Oak',
-  'Timber', 'Beech', 'Brown Oak', 'Natural Oak', 'Maple', 'Cascina Pine'
+  'Timber', 'Brown Oak', 'Natural Oak', 'Maple', 'Cascina Pine'
+  // Note: 'Beech' excluded — source image already has horizontal grain
 ]);
 
 function updateDesktopTexture() {
