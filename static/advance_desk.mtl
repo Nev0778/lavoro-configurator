@@ -1,0 +1,53 @@
+# material "Anthracite Sherman Oak"
+newmtl 1b69d3ac_b93a_4182_86b5_333d6e99d0dd
+illum 1
+Ka 0 0 0
+Kd 1 1 1
+Ks 0 0 0
+Tf 1 1 1
+d 1
+Tr 0
+map_Ka Anthracite_Sherman_Oak.jpg
+map_Kd Anthracite_Sherman_Oak.jpg
+
+# material "Default Material"
+newmtl Default_Material
+illum 1
+Ka 0.792157 0.211765 0.0627451
+Kd 1 0 0
+Ks 0 0 0
+Tf 1 1 1
+d 1
+Tr 0
+
+# material "Black"
+newmtl b177267a_1260_4ca7_a97f_50f767cb6183
+illum 1
+Ka 0 0 0
+Kd 0 0 0
+Ks 0 0 0
+Tf 1 1 1
+d 1
+Tr 0
+
+# material "White"
+newmtl bfd02370_5685_4959_b496_f35a94f1e7b2
+illum 1
+Ka 0 0 0
+Kd 1 1 1
+Ks 0 0 0
+Tf 1 1 1
+d 1
+Tr 0
+
+# material "GreyD"
+newmtl e04a8809_3463_479b_8469_9a66993b63bc
+illum 1
+Ka 0 0 0
+Kd 0.117647 0.117647 0.117647
+Ks 0 0 0
+Tf 1 1 1
+d 1
+Tr 0
+
+
