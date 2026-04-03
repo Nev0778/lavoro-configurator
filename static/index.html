@@ -607,9 +607,9 @@ const FRAME_FINISHES = [
   { name: 'Anthracite',    ral: '7016', hex: '#383e42', swatch: '/static/swatches/frame_anthracite.jpg', metalness: 0.2, roughness: 0.65 },
   { name: 'Dark Grey',     ral: '7022', hex: '#4c4a44', swatch: '/static/swatches/frame_dark_grey.jpg',  metalness: 0.2, roughness: 0.65 },
   { name: 'Raw Steel',     ral: null,   hex: '#c8c8c0', swatch: '/static/swatches/frame_raw_steel.jpg',  metalness: 0.35, roughness: 0.35 },
-  { name: 'Silver',        ral: '9006', hex: '#a8a8a6', swatch: '/static/swatches/frame_silver.jpg',     metalness: 0.3, roughness: 0.45 },
-  { name: 'Light Grey',    ral: '7047', hex: '#c8c8c7', swatch: '/static/swatches/frame_light_grey.jpg', metalness: 0.2, roughness: 0.65 },
-  { name: 'White',         ral: '9016', hex: '#f1f0ea', swatch: '/static/swatches/frame_white.jpg',      metalness: 0.05, roughness: 0.75 },
+  { name: 'Silver',        ral: '9006', hex: '#b0afac', swatch: '/static/swatches/frame_silver.jpg',     metalness: 0.45, roughness: 0.35 },
+  { name: 'Light Grey',    ral: '7047', hex: '#c8c8c7', swatch: '/static/swatches/frame_light_grey.jpg', metalness: 0.25, roughness: 0.60 },
+  { name: 'White',         ral: '9016', hex: '#d6d4ce', swatch: '/static/swatches/frame_white.jpg',      metalness: 0.35, roughness: 0.40 },
 ];
 
 const DESKTOP_DECORS = [
@@ -918,6 +918,8 @@ function loadDeskOBJ() {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
+        // Recompute smooth vertex normals to eliminate hard-edge seams from CAD export
+        child.geometry.computeVertexNormals();
 
         // Assign material by the mesh's name (group name) or material name
         const matName = child.name || (child.material && child.material.name ? child.material.name : '');
