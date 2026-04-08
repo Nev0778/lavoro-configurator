@@ -134,12 +134,18 @@ async def get_revit_catalog(
     frame:   str = Query("Black"),
     desktop: str = Query("Natural Oak"),
 ):
-    """Generate and return a bespoke Revit Family Type Catalog."""
+    """Generate a bespoke Revit Type Catalog and bundle it with the RFA in a ZIP."""
     txt_bytes = generate_revit_catalog(width, depth, frame, desktop)
-    filename = f"Lavoro-Advance-{width}x{depth}-Revit-TypeCatalog.txt"
+    rfa_path = os.path.join(os.path.dirname(__file__), "static", "Lavoro_Design_Advance.rfa")
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f"Lavoro_Design_Advance_{width}x{depth}_TypeCatalog.txt", txt_bytes)
+        zf.write(rfa_path, "Lavoro_Design_Advance.rfa")
+    zip_buffer.seek(0)
+    filename = f"Lavoro-Advance-{width}x{depth}-Revit.zip"
     return StreamingResponse(
-        io.BytesIO(txt_bytes),
-        media_type="application/octet-stream",
+        zip_buffer,
+        media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
@@ -170,9 +176,11 @@ async def get_all_files(
         # IFC
         zf.writestr(f"Lavoro-Advance-{width}x{depth}-BIM.ifc",
                     generate_ifc(width, depth, frame, desktop))
-        # Revit catalog
-        zf.writestr(f"Lavoro-Advance-{width}x{depth}-Revit-TypeCatalog.txt",
+        # Revit type catalog + RFA family file
+        zf.writestr(f"Lavoro_Design_Advance_{width}x{depth}_TypeCatalog.txt",
                     generate_revit_catalog(width, depth, frame, desktop))
+        rfa_path = os.path.join(os.path.dirname(__file__), "static", "Lavoro_Design_Advance.rfa")
+        zf.write(rfa_path, "Lavoro_Design_Advance.rfa")
 
     zip_buffer.seek(0)
     filename = f"Lavoro-Advance-{width}x{depth}-BespokeFiles.zip"
